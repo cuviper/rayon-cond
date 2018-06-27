@@ -1,0 +1,10 @@
+[package]
+name = "rayon-cond"
+version = "0.0.1"
+authors = ["Josh Stone <cuviper@gmail.com>"]
+description = "Experimental iterator wrapper that is conditionally parallel or serial."
+license = "Apache-2.0/MIT"
+
+[dependencies]
+rayon = "1.0.1"
+either = "1.5.0"
