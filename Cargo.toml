@@ -7,3 +7,4 @@ license = "Apache-2.0/MIT"
 
 [dependencies]
 rayon = "1.0.1"
+itertools = "0.7.8"

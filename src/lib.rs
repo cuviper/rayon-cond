@@ -1,7 +1,10 @@
+extern crate itertools;
 extern crate rayon;
 
+use itertools::Itertools;
 use rayon::prelude::*;
 
+use itertools::structs as it;
 use rayon::iter as ri;
 use std::iter as si;
 
@@ -157,6 +160,20 @@ where
         S: Iterator<Item = &'a T>,
     {
         wrap_either!(self, iter => iter.cloned())
+    }
+
+    pub fn inspect<OP>(self, inspect_op: OP) -> CondIterator<ri::Inspect<P, OP>, si::Inspect<S, OP>>
+    where
+        OP: Fn(&P::Item) + Sync + Send,
+    {
+        wrap_either!(self, iter => iter.inspect(inspect_op))
+    }
+
+    pub fn update<OP>(self, update_op: OP) -> CondIterator<ri::Update<P, OP>, it::Update<S, OP>>
+    where
+        OP: Fn(&mut P::Item) + Sync + Send,
+    {
+        wrap_either!(self, iter => iter.update(update_op))
     }
 
     pub fn sum<Sum>(self) -> Sum
