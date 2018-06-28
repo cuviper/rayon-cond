@@ -220,6 +220,30 @@ where
         }
     }
 
+    pub fn reduce<OP, ID>(self, identity: ID, op: OP) -> P::Item
+    where
+        OP: Fn(P::Item, P::Item) -> P::Item + Sync + Send,
+        ID: Fn() -> P::Item + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.reduce(identity, op),
+            Serial(iter) => iter.fold(identity(), op),
+        }
+    }
+
+    pub fn reduce_with<OP>(self, op: OP) -> Option<P::Item>
+    where
+        OP: Fn(P::Item, P::Item) -> P::Item + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.reduce_with(op),
+            Serial(iter) => iter.fold(None, |acc, item| match acc {
+                Some(acc) => Some(op(acc, item)),
+                None => Some(item),
+            }),
+        }
+    }
+
     pub fn sum<Sum>(self) -> Sum
     where
         Sum: Send + si::Sum<P::Item> + si::Sum<Sum>,
