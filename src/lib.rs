@@ -448,6 +448,16 @@ where
     {
         wrap_either!(self, iter => iter.intersperse(element))
     }
+
+    pub fn opt_len(&self) -> Option<usize> {
+        match self.inner {
+            Parallel(ref iter) => iter.opt_len(),
+            Serial(ref iter) => match iter.size_hint() {
+                (lo, Some(hi)) if lo == hi => Some(lo),
+                _ => None,
+            },
+        }
+    }
 }
 
 impl<P, S> CondIterator<P, S>
@@ -481,5 +491,15 @@ where
 
     pub fn enumerate(self) -> CondIterator<ri::Enumerate<P>, si::Enumerate<S>> {
         wrap_either!(self, iter => iter.enumerate())
+    }
+}
+
+impl<P, S> CondIterator<P, S>
+where
+    P: IndexedParallelIterator,
+    S: ExactSizeIterator<Item = P::Item>,
+{
+    pub fn len(&self) -> usize {
+        either!(self, ref iter => iter.len())
     }
 }
