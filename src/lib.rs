@@ -197,6 +197,29 @@ where
         wrap_either!(self, iter => iter.filter_map(filter_op))
     }
 
+    pub fn flat_map<F, I>(self, map_op: F) -> CondIterator<ri::FlatMap<P, F>, si::FlatMap<S, I, F>>
+    where
+        F: Fn(P::Item) -> I + Sync + Send,
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+    {
+        wrap_either!(self, iter => iter.flat_map(map_op))
+    }
+
+    pub fn flatten(
+        self,
+    ) -> CondIterator<ri::Flatten<P>, it::Flatten<S, <S::Item as IntoIterator>::IntoIter>>
+    where
+        P::Item: IntoParallelIterator,
+        S::Item: IntoIterator<Item = <P::Item as IntoParallelIterator>::Item>,
+    {
+        CondIterator {
+            inner: match self.inner {
+                Parallel(iter) => Parallel(iter.flatten()),
+                Serial(iter) => Serial(Itertools::flatten(iter)),
+            },
+        }
+    }
+
     pub fn sum<Sum>(self) -> Sum
     where
         Sum: Send + si::Sum<P::Item> + si::Sum<Sum>,
