@@ -349,11 +349,47 @@ where
         wrap_either!(self, iter => iter.chain(chain))
     }
 
+    pub fn find_any<Pred>(self, predicate: Pred) -> Option<P::Item>
+    where
+        Pred: Fn(&P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.find_any(predicate),
+            Serial(mut iter) => iter.find(predicate),
+        }
+    }
+
+    pub fn find_first<Pred>(self, predicate: Pred) -> Option<P::Item>
+    where
+        Pred: Fn(&P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.find_first(predicate),
+            Serial(mut iter) => iter.find(predicate),
+        }
+    }
+
     pub fn collect<C>(self) -> C
     where
         C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
     {
         either!(self, iter => iter.collect())
+    }
+}
+
+impl<P, S> CondIterator<P, S>
+where
+    P: ParallelIterator,
+    S: DoubleEndedIterator<Item = P::Item>,
+{
+    pub fn find_last<Pred>(self, predicate: Pred) -> Option<P::Item>
+    where
+        Pred: Fn(&P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.find_last(predicate),
+            Serial(mut iter) => iter.rfind(predicate),
+        }
     }
 }
 
