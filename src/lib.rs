@@ -497,6 +497,16 @@ where
 impl<P, S> CondIterator<P, S>
 where
     P: IndexedParallelIterator,
+    S: DoubleEndedIterator<Item = P::Item>,
+{
+    pub fn rev(self) -> CondIterator<ri::Rev<P>, si::Rev<S>> {
+        wrap_either!(self, iter => iter.rev())
+    }
+}
+
+impl<P, S> CondIterator<P, S>
+where
+    P: IndexedParallelIterator,
     S: ExactSizeIterator<Item = P::Item>,
 {
     pub fn len(&self) -> usize {
