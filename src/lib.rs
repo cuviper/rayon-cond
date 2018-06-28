@@ -133,13 +133,13 @@ where
         wrap_either!(self, iter => iter.map(map_op))
     }
 
-    // If we want to avoid `impl Iterator`, we'll need to implement a custom
+    // If we want to avoid `impl FnMut`, we'll need to implement a custom
     // serialized `MapWith` type to return.
     pub fn map_with<F, T, R>(
         self,
         mut init: T,
         map_op: F,
-    ) -> CondIterator<ri::MapWith<P, T, F>, impl Iterator<Item = R>>
+    ) -> CondIterator<ri::MapWith<P, T, F>, si::Map<S, impl FnMut(P::Item) -> R>>
     where
         F: Fn(&mut T, P::Item) -> R + Sync + Send,
         T: Send + Clone,
