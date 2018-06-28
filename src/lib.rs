@@ -481,6 +481,41 @@ where
     P: IndexedParallelIterator,
     S: Iterator<Item = P::Item>,
 {
+    pub fn collect_into_vec(self, target: &mut Vec<P::Item>) {
+        match self.inner {
+            Parallel(iter) => iter.collect_into_vec(target),
+            Serial(iter) => {
+                target.clear();
+                let (lower, _) = iter.size_hint();
+                target.reserve(lower);
+                target.extend(iter);
+            }
+        }
+    }
+
+    pub fn unzip_into_vecs<A, B>(self, left: &mut Vec<A>, right: &mut Vec<B>)
+    where
+        P: IndexedParallelIterator<Item = (A, B)>,
+        S: Iterator<Item = (A, B)>,
+        A: Send,
+        B: Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.unzip_into_vecs(left, right),
+            Serial(iter) => {
+                left.clear();
+                right.clear();
+                let (lower, _) = iter.size_hint();
+                left.reserve(lower);
+                left.reserve(lower);
+                iter.for_each(|(a, b)| {
+                    left.push(a);
+                    right.push(b);
+                })
+            }
+        }
+    }
+
     pub fn zip<Z>(self, other: Z) -> CondIterator<ri::Zip<P, Z::Iter>, si::Zip<S, Z::IntoIter>>
     where
         Z: IntoParallelIterator + IntoIterator<Item = <Z as IntoParallelIterator>::Item>,
