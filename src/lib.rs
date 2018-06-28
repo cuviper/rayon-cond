@@ -389,6 +389,15 @@ where
         }
     }
 
+    pub fn while_some<T>(self) -> CondIterator<ri::WhileSome<P>, it::WhileSome<S>>
+    where
+        P: ParallelIterator<Item = Option<T>>,
+        S: Iterator<Item = Option<T>>,
+        T: Send,
+    {
+        wrap_either!(self, iter => iter.while_some())
+    }
+
     pub fn collect<C>(self) -> C
     where
         C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
