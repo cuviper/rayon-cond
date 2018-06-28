@@ -492,6 +492,26 @@ where
     pub fn enumerate(self) -> CondIterator<ri::Enumerate<P>, si::Enumerate<S>> {
         wrap_either!(self, iter => iter.enumerate())
     }
+
+    pub fn position_any<Pred>(self, predicate: Pred) -> Option<usize>
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.position_any(predicate),
+            Serial(mut iter) => iter.position(predicate),
+        }
+    }
+
+    pub fn position_first<Pred>(self, predicate: Pred) -> Option<usize>
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.position_first(predicate),
+            Serial(mut iter) => iter.position(predicate),
+        }
+    }
 }
 
 impl<P, S> CondIterator<P, S>
@@ -511,5 +531,21 @@ where
 {
     pub fn len(&self) -> usize {
         either!(self, ref iter => iter.len())
+    }
+}
+
+impl<P, S> CondIterator<P, S>
+where
+    P: IndexedParallelIterator,
+    S: ExactSizeIterator + DoubleEndedIterator<Item = P::Item>,
+{
+    pub fn position_last<Pred>(self, predicate: Pred) -> Option<usize>
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.position_last(predicate),
+            Serial(mut iter) => iter.rposition(predicate),
+        }
     }
 }
