@@ -1,11 +1,11 @@
-extern crate either;
 extern crate rayon;
 
-use either::{Either, Left, Right};
 use rayon::prelude::*;
 
 use rayon::iter as ri;
 use std::iter as si;
+
+use EitherIterator::*;
 
 /// An iterator that could be parallel or serial, with a common API either way.
 pub struct CondIterator<P, S>
@@ -13,7 +13,16 @@ where
     P: ParallelIterator,
     S: Iterator<Item = P::Item>,
 {
-    inner: Either<P, S>,
+    inner: EitherIterator<P, S>,
+}
+
+enum EitherIterator<P, S>
+where
+    P: ParallelIterator,
+    S: Iterator<Item = P::Item>,
+{
+    Parallel(P),
+    Serial(S),
 }
 
 impl<P, S> CondIterator<P, S>
@@ -38,7 +47,7 @@ where
         I: IntoParallelIterator<Iter = P, Item = P::Item>,
     {
         CondIterator {
-            inner: Left(iterable.into_par_iter()),
+            inner: Parallel(iterable.into_par_iter()),
         }
     }
 
@@ -47,24 +56,30 @@ where
         I: IntoIterator<IntoIter = S, Item = S::Item>,
     {
         CondIterator {
-            inner: Right(iterable.into_iter()),
+            inner: Serial(iterable.into_iter()),
         }
     }
 
     pub fn is_parallel(&self) -> bool {
-        self.inner.is_left()
+        match self.inner {
+            Parallel(_) => true,
+            _ => false,
+        }
     }
 
     pub fn is_serial(&self) -> bool {
-        self.inner.is_right()
+        match self.inner {
+            Serial(_) => true,
+            _ => false,
+        }
     }
 }
 
 macro_rules! either {
     ($self:ident, $pattern:pat => $result:expr) => {
         match $self.inner {
-            Either::Left($pattern) => $result,
-            Either::Right($pattern) => $result,
+            Parallel($pattern) => $result,
+            Serial($pattern) => $result,
         }
     };
 }
@@ -73,8 +88,8 @@ macro_rules! wrap_either {
     ($self:ident, $pattern:pat => $result:expr) => {
         CondIterator {
             inner: match $self.inner {
-                Left($pattern) => Left($result),
-                Right($pattern) => Right($result),
+                Parallel($pattern) => Parallel($result),
+                Serial($pattern) => Serial($result),
             },
         }
     };
@@ -98,8 +113,8 @@ where
         T: Send + Clone,
     {
         match self.inner {
-            Left(iter) => iter.for_each_with(init, op),
-            Right(iter) => iter.for_each(move |item| op(&mut init, item)),
+            Parallel(iter) => iter.for_each_with(init, op),
+            Serial(iter) => iter.for_each(move |item| op(&mut init, item)),
         }
     }
 
