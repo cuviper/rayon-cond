@@ -339,6 +339,16 @@ where
         either!(self, iter => iter.max_by_key(f))
     }
 
+    pub fn chain<C>(
+        self,
+        chain: C,
+    ) -> CondIterator<ri::Chain<P, C::Iter>, si::Chain<S, C::IntoIter>>
+    where
+        C: IntoParallelIterator<Item = P::Item> + IntoIterator<Item = P::Item>,
+    {
+        wrap_either!(self, iter => iter.chain(chain))
+    }
+
     pub fn collect<C>(self) -> C
     where
         C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
