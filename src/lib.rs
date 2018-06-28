@@ -1,6 +1,8 @@
+extern crate either;
 extern crate itertools;
 extern crate rayon;
 
+use either::Either;
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::cmp::Ordering;
@@ -403,6 +405,38 @@ where
         C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
     {
         either!(self, iter => iter.collect())
+    }
+
+    pub fn unzip<A, B, FromA, FromB>(self) -> (FromA, FromB)
+    where
+        P: ParallelIterator<Item = (A, B)>,
+        S: Iterator<Item = (A, B)>,
+        FromA: Default + Send + ParallelExtend<A> + Extend<A>,
+        FromB: Default + Send + ParallelExtend<B> + Extend<B>,
+        A: Send,
+        B: Send,
+    {
+        either!(self, iter => iter.unzip())
+    }
+
+    // NB: `Iterator::partition` only allows a single output type
+    pub fn partition<B, Pred>(self, predicate: Pred) -> (B, B)
+    where
+        B: Default + Send + ParallelExtend<P::Item> + Extend<S::Item>,
+        Pred: Fn(&P::Item) -> bool + Sync + Send,
+    {
+        either!(self, iter => iter.partition(predicate))
+    }
+
+    pub fn partition_map<A, B, Pred, L, R>(self, predicate: Pred) -> (A, B)
+    where
+        A: Default + Send + ParallelExtend<L> + Extend<L>,
+        B: Default + Send + ParallelExtend<R> + Extend<R>,
+        Pred: Fn(P::Item) -> Either<L, R> + Sync + Send,
+        L: Send,
+        R: Send,
+    {
+        either!(self, iter => iter.partition_map(predicate))
     }
 }
 
