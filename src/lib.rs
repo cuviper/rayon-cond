@@ -438,6 +438,16 @@ where
     {
         either!(self, iter => iter.partition_map(predicate))
     }
+
+    pub fn intersperse(
+        self,
+        element: P::Item,
+    ) -> CondIterator<ri::Intersperse<P>, it::Intersperse<S>>
+    where
+        P::Item: Clone,
+    {
+        wrap_either!(self, iter => iter.intersperse(element))
+    }
 }
 
 impl<P, S> CondIterator<P, S>
