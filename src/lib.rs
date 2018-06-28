@@ -3,6 +3,7 @@ extern crate rayon;
 
 use itertools::Itertools;
 use rayon::prelude::*;
+use std::cmp::Ordering;
 
 use itertools::structs as it;
 use rayon::iter as ri;
@@ -292,6 +293,50 @@ where
         Product: Send + si::Product<P::Item> + si::Product<Product>,
     {
         either!(self, iter => iter.product())
+    }
+
+    pub fn min(self) -> Option<P::Item>
+    where
+        P::Item: Ord,
+    {
+        either!(self, iter => iter.min())
+    }
+
+    pub fn min_by<F>(self, f: F) -> Option<P::Item>
+    where
+        F: Sync + Send + Fn(&P::Item, &P::Item) -> Ordering,
+    {
+        either!(self, iter => iter.min_by(f))
+    }
+
+    pub fn min_by_key<K, F>(self, f: F) -> Option<P::Item>
+    where
+        K: Ord + Send,
+        F: Sync + Send + Fn(&P::Item) -> K,
+    {
+        either!(self, iter => iter.min_by_key(f))
+    }
+
+    pub fn max(self) -> Option<P::Item>
+    where
+        P::Item: Ord,
+    {
+        either!(self, iter => iter.max())
+    }
+
+    pub fn max_by<F>(self, f: F) -> Option<P::Item>
+    where
+        F: Sync + Send + Fn(&P::Item, &P::Item) -> Ordering,
+    {
+        either!(self, iter => iter.max_by(f))
+    }
+
+    pub fn max_by_key<K, F>(self, f: F) -> Option<P::Item>
+    where
+        K: Ord + Send,
+        F: Sync + Send + Fn(&P::Item) -> K,
+    {
+        either!(self, iter => iter.max_by_key(f))
     }
 
     pub fn collect<C>(self) -> C
