@@ -524,6 +524,17 @@ where
         wrap_either!(self, iter => iter.zip(other))
     }
 
+    pub fn zip_eq<Z>(
+        self,
+        other: Z,
+    ) -> CondIterator<ri::ZipEq<P, Z::Iter>, it::ZipEq<S, Z::IntoIter>>
+    where
+        Z: IntoParallelIterator + IntoIterator<Item = <Z as IntoParallelIterator>::Item>,
+        Z::Iter: IndexedParallelIterator,
+    {
+        wrap_either!(self, iter => iter.zip_eq(other))
+    }
+
     pub fn enumerate(self) -> CondIterator<ri::Enumerate<P>, si::Enumerate<S>> {
         wrap_either!(self, iter => iter.enumerate())
     }
