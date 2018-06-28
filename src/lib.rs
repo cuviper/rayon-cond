@@ -493,6 +493,14 @@ where
         wrap_either!(self, iter => iter.enumerate())
     }
 
+    pub fn skip(self, n: usize) -> CondIterator<ri::Skip<P>, si::Skip<S>> {
+        wrap_either!(self, iter => iter.skip(n))
+    }
+
+    pub fn take(self, n: usize) -> CondIterator<ri::Take<P>, si::Take<S>> {
+        wrap_either!(self, iter => iter.take(n))
+    }
+
     pub fn position_any<Pred>(self, predicate: Pred) -> Option<usize>
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
