@@ -130,6 +130,35 @@ where
         wrap_either!(self, iter => iter.map(map_op))
     }
 
+    // If we want to avoid `impl Iterator`, we'll need to implement a custom
+    // serialized `MapWith` type to return.
+    pub fn map_with<F, T, R>(
+        self,
+        mut init: T,
+        map_op: F,
+    ) -> CondIterator<ri::MapWith<P, T, F>, impl Iterator<Item = R>>
+    where
+        F: Fn(&mut T, P::Item) -> R + Sync + Send,
+        T: Send + Clone,
+        R: Send,
+    {
+        CondIterator {
+            inner: match self.inner {
+                Parallel(iter) => Parallel(iter.map_with(init, map_op)),
+                Serial(iter) => Serial(iter.map(move |item| map_op(&mut init, item))),
+            },
+        }
+    }
+
+    pub fn cloned<'a, T>(self) -> CondIterator<ri::Cloned<P>, si::Cloned<S>>
+    where
+        T: 'a + Clone + Sync + Send,
+        P: ParallelIterator<Item = &'a T>,
+        S: Iterator<Item = &'a T>,
+    {
+        wrap_either!(self, iter => iter.cloned())
+    }
+
     pub fn sum<Sum>(self) -> Sum
     where
         Sum: Send + si::Sum<P::Item> + si::Sum<Sum>,
