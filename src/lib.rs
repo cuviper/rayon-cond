@@ -369,6 +369,26 @@ where
         }
     }
 
+    pub fn any<Pred>(self, predicate: Pred) -> bool
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.any(predicate),
+            Serial(mut iter) => iter.any(predicate),
+        }
+    }
+
+    pub fn all<Pred>(self, predicate: Pred) -> bool
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.all(predicate),
+            Serial(mut iter) => iter.all(predicate),
+        }
+    }
+
     pub fn collect<C>(self) -> C
     where
         C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
