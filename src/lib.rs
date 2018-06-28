@@ -244,6 +244,42 @@ where
         }
     }
 
+    // NB: Rayon's `fold` produces another iterator, so we have to fake that serially.
+    pub fn fold<T, ID, F>(
+        self,
+        identity: ID,
+        fold_op: F,
+    ) -> CondIterator<ri::Fold<P, ID, F>, si::Once<T>>
+    where
+        F: Fn(T, P::Item) -> T + Sync + Send,
+        ID: Fn() -> T + Sync + Send,
+        T: Send,
+    {
+        CondIterator {
+            inner: match self.inner {
+                Parallel(iter) => Parallel(iter.fold(identity, fold_op)),
+                Serial(iter) => Serial(si::once(iter.fold(identity(), fold_op))),
+            },
+        }
+    }
+
+    pub fn fold_with<F, T>(
+        self,
+        init: T,
+        fold_op: F,
+    ) -> CondIterator<ri::FoldWith<P, T, F>, si::Once<T>>
+    where
+        F: Fn(T, P::Item) -> T + Sync + Send,
+        T: Send + Clone,
+    {
+        CondIterator {
+            inner: match self.inner {
+                Parallel(iter) => Parallel(iter.fold_with(init, fold_op)),
+                Serial(iter) => Serial(si::once(iter.fold(init, fold_op))),
+            },
+        }
+    }
+
     pub fn sum<Sum>(self) -> Sum
     where
         Sum: Send + si::Sum<P::Item> + si::Sum<Sum>,
