@@ -176,6 +176,27 @@ where
         wrap_either!(self, iter => iter.update(update_op))
     }
 
+    pub fn filter<Pred>(
+        self,
+        filter_op: Pred,
+    ) -> CondIterator<ri::Filter<P, Pred>, si::Filter<S, Pred>>
+    where
+        Pred: Fn(&P::Item) -> bool + Sync + Send,
+    {
+        wrap_either!(self, iter => iter.filter(filter_op))
+    }
+
+    pub fn filter_map<Pred, R>(
+        self,
+        filter_op: Pred,
+    ) -> CondIterator<ri::FilterMap<P, Pred>, si::FilterMap<S, Pred>>
+    where
+        Pred: Fn(P::Item) -> Option<R> + Sync + Send,
+        R: Send,
+    {
+        wrap_either!(self, iter => iter.filter_map(filter_op))
+    }
+
     pub fn sum<Sum>(self) -> Sum
     where
         Sum: Send + si::Sum<P::Item> + si::Sum<Sum>,
