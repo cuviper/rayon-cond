@@ -557,6 +557,78 @@ where
         wrap_either!(self, iter => iter.interleave_shortest(other))
     }
 
+    pub fn cmp<I>(self, other: I) -> Ordering
+    where
+        I: IntoParallelIterator<Item = P::Item> + IntoIterator<Item = S::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: Ord,
+    {
+        either!(self, iter => iter.cmp(other))
+    }
+
+    pub fn partial_cmp<I>(self, other: I) -> Option<Ordering>
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialOrd<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.partial_cmp(other))
+    }
+
+    pub fn eq<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialEq<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.eq(other))
+    }
+
+    pub fn ne<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialEq<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.ne(other))
+    }
+
+    pub fn lt<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialOrd<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.lt(other))
+    }
+
+    pub fn le<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialOrd<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.le(other))
+    }
+
+    pub fn gt<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialOrd<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.gt(other))
+    }
+
+    pub fn ge<I>(self, other: I) -> bool
+    where
+        I: IntoParallelIterator + IntoIterator<Item = <I as IntoParallelIterator>::Item>,
+        I::Iter: IndexedParallelIterator,
+        P::Item: PartialOrd<<I as IntoParallelIterator>::Item>,
+    {
+        either!(self, iter => iter.ge(other))
+    }
+
     pub fn enumerate(self) -> CondIterator<ri::Enumerate<P>, si::Enumerate<S>> {
         wrap_either!(self, iter => iter.enumerate())
     }
