@@ -471,7 +471,7 @@ where
     {
         match self.inner {
             Parallel(iter) => iter.find_last(predicate),
-            Serial(mut iter) => iter.rfind(predicate),
+            Serial(iter) => iter.rev().find(predicate),
         }
     }
 }
