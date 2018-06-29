@@ -535,6 +535,28 @@ where
         wrap_either!(self, iter => iter.zip_eq(other))
     }
 
+    pub fn interleave<I>(
+        self,
+        other: I,
+    ) -> CondIterator<ri::Interleave<P, I::Iter>, it::Interleave<S, I::IntoIter>>
+    where
+        I: IntoParallelIterator<Item = P::Item> + IntoIterator<Item = S::Item>,
+        I::Iter: IndexedParallelIterator<Item = P::Item>,
+    {
+        wrap_either!(self, iter => iter.interleave(other))
+    }
+
+    pub fn interleave_shortest<I>(
+        self,
+        other: I,
+    ) -> CondIterator<ri::InterleaveShortest<P, I::Iter>, it::InterleaveShortest<S, I::IntoIter>>
+    where
+        I: IntoParallelIterator<Item = P::Item> + IntoIterator<Item = S::Item>,
+        I::Iter: IndexedParallelIterator<Item = P::Item>,
+    {
+        wrap_either!(self, iter => iter.interleave_shortest(other))
+    }
+
     pub fn enumerate(self) -> CondIterator<ri::Enumerate<P>, si::Enumerate<S>> {
         wrap_either!(self, iter => iter.enumerate())
     }
