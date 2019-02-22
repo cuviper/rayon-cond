@@ -112,6 +112,19 @@ where
     }
 }
 
+impl<P, S> CondIterator<P, S>
+where
+    P: ParallelIterator,
+    S: Iterator<Item = P::Item> + Send,
+{
+    pub fn into_parallel(self) -> Either<P, ri::IterBridge<S>> {
+        match self.inner {
+            Parallel(iter) => Either::Left(iter),
+            Serial(iter) => Either::Right(iter.par_bridge()),
+        }
+    }
+}
+
 macro_rules! either {
     ($self:ident, $pattern:pat => $result:expr) => {
         match $self.inner {
