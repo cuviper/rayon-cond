@@ -42,18 +42,10 @@ use itertools::structs as it;
 use rayon::iter as ri;
 use std::iter as si;
 
-use EitherIterator::*;
+use CondIterator::*;
 
 /// An iterator that could be parallel or serial, with a common API either way.
-pub struct CondIterator<P, S>
-where
-    P: ParallelIterator,
-    S: Iterator<Item = P::Item>,
-{
-    inner: EitherIterator<P, S>,
-}
-
-enum EitherIterator<P, S>
+pub enum CondIterator<P, S>
 where
     P: ParallelIterator,
     S: Iterator<Item = P::Item>,
@@ -83,29 +75,25 @@ where
     where
         I: IntoParallelIterator<Iter = P, Item = P::Item>,
     {
-        CondIterator {
-            inner: Parallel(iterable.into_par_iter()),
-        }
+        Parallel(iterable.into_par_iter())
     }
 
     pub fn from_iter<I>(iterable: I) -> Self
     where
         I: IntoIterator<IntoIter = S, Item = S::Item>,
     {
-        CondIterator {
-            inner: Serial(iterable.into_iter()),
-        }
+        Serial(iterable.into_iter())
     }
 
     pub fn is_parallel(&self) -> bool {
-        match self.inner {
+        match self {
             Parallel(_) => true,
             _ => false,
         }
     }
 
     pub fn is_serial(&self) -> bool {
-        match self.inner {
+        match self {
             Serial(_) => true,
             _ => false,
         }
@@ -118,7 +106,7 @@ where
     S: Iterator<Item = P::Item> + Send,
 {
     pub fn into_parallel(self) -> Either<P, ri::IterBridge<S>> {
-        match self.inner {
+        match self {
             Parallel(iter) => Either::Left(iter),
             Serial(iter) => Either::Right(iter.par_bridge()),
         }
@@ -127,7 +115,7 @@ where
 
 macro_rules! either {
     ($self:ident, $pattern:pat => $result:expr) => {
-        match $self.inner {
+        match $self {
             Parallel($pattern) => $result,
             Serial($pattern) => $result,
         }
@@ -136,11 +124,9 @@ macro_rules! either {
 
 macro_rules! wrap_either {
     ($self:ident, $pattern:pat => $result:expr) => {
-        CondIterator {
-            inner: match $self.inner {
-                Parallel($pattern) => Parallel($result),
-                Serial($pattern) => Serial($result),
-            },
+        match $self {
+            Parallel($pattern) => Parallel($result),
+            Serial($pattern) => Serial($result),
         }
     };
 }
@@ -162,7 +148,7 @@ where
         OP: Fn(&mut T, P::Item) + Sync + Send,
         T: Send + Clone,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.for_each_with(init, op),
             Serial(iter) => iter.for_each(move |item| op(&mut init, item)),
         }
@@ -173,7 +159,7 @@ where
         OP: Fn(&mut T, P::Item) + Sync + Send,
         INIT: Fn() -> T + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.for_each_init(init, op),
             Serial(iter) => {
                 let mut init = init();
@@ -206,11 +192,9 @@ where
         T: Send + Clone,
         R: Send,
     {
-        CondIterator {
-            inner: match self.inner {
-                Parallel(iter) => Parallel(iter.map_with(init, map_op)),
-                Serial(iter) => Serial(iter.map(move |item| map_op(&mut init, item))),
-            },
+        match self {
+            Parallel(iter) => Parallel(iter.map_with(init, map_op)),
+            Serial(iter) => Serial(iter.map(move |item| map_op(&mut init, item))),
         }
     }
 
@@ -226,14 +210,12 @@ where
         INIT: Fn() -> T + Sync + Send,
         R: Send,
     {
-        CondIterator {
-            inner: match self.inner {
-                Parallel(iter) => Parallel(iter.map_init(init, map_op)),
-                Serial(iter) => {
-                    let mut init = init();
-                    Serial(iter.map(move |item| map_op(&mut init, item)))
-                }
-            },
+        match self {
+            Parallel(iter) => Parallel(iter.map_init(init, map_op)),
+            Serial(iter) => {
+                let mut init = init();
+                Serial(iter.map(move |item| map_op(&mut init, item)))
+            }
         }
     }
 
@@ -302,7 +284,7 @@ where
         OP: Fn(P::Item, P::Item) -> P::Item + Sync + Send,
         ID: Fn() -> P::Item + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.reduce(identity, op),
             Serial(iter) => iter.fold(identity(), op),
         }
@@ -312,7 +294,7 @@ where
     where
         OP: Fn(P::Item, P::Item) -> P::Item + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.reduce_with(op),
             Serial(iter) => iter.fold(None, |acc, item| match acc {
                 Some(acc) => Some(op(acc, item)),
@@ -332,11 +314,9 @@ where
         ID: Fn() -> T + Sync + Send,
         T: Send,
     {
-        CondIterator {
-            inner: match self.inner {
-                Parallel(iter) => Parallel(iter.fold(identity, fold_op)),
-                Serial(iter) => Serial(si::once(iter.fold(identity(), fold_op))),
-            },
+        match self {
+            Parallel(iter) => Parallel(iter.fold(identity, fold_op)),
+            Serial(iter) => Serial(si::once(iter.fold(identity(), fold_op))),
         }
     }
 
@@ -349,11 +329,9 @@ where
         F: Fn(T, P::Item) -> T + Sync + Send,
         T: Send + Clone,
     {
-        CondIterator {
-            inner: match self.inner {
-                Parallel(iter) => Parallel(iter.fold_with(init, fold_op)),
-                Serial(iter) => Serial(si::once(iter.fold(init, fold_op))),
-            },
+        match self {
+            Parallel(iter) => Parallel(iter.fold_with(init, fold_op)),
+            Serial(iter) => Serial(si::once(iter.fold(init, fold_op))),
         }
     }
 
@@ -429,7 +407,7 @@ where
     where
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.find_any(predicate),
             Serial(mut iter) => iter.find(predicate),
         }
@@ -439,7 +417,7 @@ where
     where
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.find_first(predicate),
             Serial(mut iter) => iter.find(predicate),
         }
@@ -449,7 +427,7 @@ where
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.any(predicate),
             Serial(mut iter) => iter.any(predicate),
         }
@@ -459,7 +437,7 @@ where
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.all(predicate),
             Serial(mut iter) => iter.all(predicate),
         }
@@ -501,7 +479,7 @@ where
         B: Default + Send + CondExtend<P::Item>,
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.partition(predicate),
             Serial(iter) => iter.partition_map(|item| {
                 if predicate(&item) {
@@ -535,7 +513,7 @@ where
     }
 
     pub fn opt_len(&self) -> Option<usize> {
-        match self.inner {
+        match self {
             Parallel(ref iter) => iter.opt_len(),
             Serial(ref iter) => match iter.size_hint() {
                 (lo, Some(hi)) if lo == hi => Some(lo),
@@ -554,7 +532,7 @@ where
     where
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.find_last(predicate),
             Serial(mut iter) => iter.rfind(predicate),
         }
@@ -567,7 +545,7 @@ where
     S: Iterator<Item = P::Item>,
 {
     pub fn collect_into_vec(self, target: &mut Vec<P::Item>) {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.collect_into_vec(target),
             Serial(iter) => {
                 target.clear();
@@ -585,7 +563,7 @@ where
         A: Send,
         B: Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.unzip_into_vecs(left, right),
             Serial(iter) => {
                 left.clear();
@@ -730,7 +708,7 @@ where
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.position_any(predicate),
             Serial(mut iter) => iter.position(predicate),
         }
@@ -740,7 +718,7 @@ where
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.position_first(predicate),
             Serial(mut iter) => iter.position(predicate),
         }
@@ -776,7 +754,7 @@ where
     where
         Pred: Fn(P::Item) -> bool + Sync + Send,
     {
-        match self.inner {
+        match self {
             Parallel(iter) => iter.position_last(predicate),
             Serial(mut iter) => iter.rposition(predicate),
         }
@@ -792,7 +770,7 @@ where
         P: ParallelIterator<Item = T>,
         S: Iterator<Item = T>,
     {
-        match cond_iter.inner {
+        match cond_iter {
             Parallel(iter) => Self::from_par_iter(iter),
             Serial(iter) => Self::from_iter(iter),
         }
@@ -815,7 +793,7 @@ where
         P: ParallelIterator<Item = T>,
         S: Iterator<Item = T>,
     {
-        match cond_iter.inner {
+        match cond_iter {
             Parallel(iter) => self.par_extend(iter),
             Serial(iter) => self.extend(iter),
         }
