@@ -45,6 +45,16 @@ use std::iter as si;
 use CondIterator::*;
 
 /// An iterator that could be parallel or serial, with a common API either way.
+///
+/// The available methods mostly follow [`ParallelIterator`] and [`IndexedParallelIterator`], as
+/// `rayon` has the stricter requirements, and they are parallelized with [`rayon::iter`] types.
+/// Serial implementations use appropriate types from [`std::iter`] and [`itertools::structs`].
+///
+/// [`ParallelIterator`]: https://docs.rs/rayon/1/rayon/iter/trait.ParallelIterator.html
+/// [`IndexedParallelIterator`]: https://docs.rs/rayon/1/rayon/iter/trait.IndexedParallelIterator.html
+/// [`rayon::iter`]: https://docs.rs/rayon/1/rayon/iter/index.html#structs
+/// [`std::iter`]: https://doc.rust-lang.org/std/iter/index.html#structs
+/// [`itertools::structs`]: https://docs.rs/itertools/0.8/itertools/structs/index.html#structs
 pub enum CondIterator<P, S>
 where
     P: ParallelIterator,
