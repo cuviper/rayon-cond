@@ -168,6 +168,20 @@ where
         }
     }
 
+    pub fn for_each_init<OP, INIT, T>(self, init: INIT, op: OP)
+    where
+        OP: Fn(&mut T, P::Item) + Sync + Send,
+        INIT: Fn() -> T + Sync + Send,
+    {
+        match self.inner {
+            Parallel(iter) => iter.for_each_init(init, op),
+            Serial(iter) => {
+                let mut init = init();
+                iter.for_each(move |item| op(&mut init, item))
+            }
+        }
+    }
+
     pub fn count(self) -> usize {
         either!(self, iter => iter.count())
     }
@@ -196,6 +210,29 @@ where
             inner: match self.inner {
                 Parallel(iter) => Parallel(iter.map_with(init, map_op)),
                 Serial(iter) => Serial(iter.map(move |item| map_op(&mut init, item))),
+            },
+        }
+    }
+
+    // If we want to avoid `impl FnMut`, we'll need to implement a custom
+    // serialized `MapInit` type to return.
+    pub fn map_init<F, INIT, T, R>(
+        self,
+        init: INIT,
+        map_op: F,
+    ) -> CondIterator<ri::MapInit<P, INIT, F>, si::Map<S, impl FnMut(P::Item) -> R>>
+    where
+        F: Fn(&mut T, P::Item) -> R + Sync + Send,
+        INIT: Fn() -> T + Sync + Send,
+        R: Send,
+    {
+        CondIterator {
+            inner: match self.inner {
+                Parallel(iter) => Parallel(iter.map_init(init, map_op)),
+                Serial(iter) => {
+                    let mut init = init();
+                    Serial(iter.map(move |item| map_op(&mut init, item)))
+                }
             },
         }
     }
