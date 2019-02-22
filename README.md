@@ -1,5 +1,10 @@
 # rayon-cond
 
+[![Crate](https://img.shields.io/crates/v/rayon-cond.svg)](https://crates.io/crates/rayon-cond)
+[![Documentation](https://docs.rs/rayon-cond/badge.svg)](https://docs.rs/rayon-cond)
+![minimum rustc 1.29](https://img.shields.io/badge/rustc-1.29+-red.svg)
+[![Build Status](https://api.cirrus-ci.com/github/cuviper/rayon-cond.svg)](https://cirrus-ci.com/github/cuviper/rayon-cond)
+
 Experimental iterator wrapper that is conditionally parallel or serial, using
 Rayon's `ParallelIterator` or the standard `Iterator` respectively.
 
@@ -30,6 +35,8 @@ fn main() {
     });
 }
 ```
+
+`rayon-cond` currently requires `rustc 1.29.0` or greater.
 
 ## License
 
