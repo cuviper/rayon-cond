@@ -252,19 +252,12 @@ where
         wrap_either!(self, iter => iter.flat_map(map_op))
     }
 
-    pub fn flatten(
-        self,
-    ) -> CondIterator<ri::Flatten<P>, it::Flatten<S, <S::Item as IntoIterator>::IntoIter>>
+    pub fn flatten(self) -> CondIterator<ri::Flatten<P>, si::Flatten<S>>
     where
         P::Item: IntoParallelIterator,
         S::Item: IntoIterator<Item = <P::Item as IntoParallelIterator>::Item>,
     {
-        CondIterator {
-            inner: match self.inner {
-                Parallel(iter) => Parallel(iter.flatten()),
-                Serial(iter) => Serial(Itertools::flatten(iter)),
-            },
-        }
+        wrap_either!(self, iter => iter.flatten())
     }
 
     pub fn reduce<OP, ID>(self, identity: ID, op: OP) -> P::Item
