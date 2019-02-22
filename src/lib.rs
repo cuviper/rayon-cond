@@ -493,13 +493,24 @@ where
         either!(self, iter => iter.unzip())
     }
 
-    // NB: `Iterator::partition` only allows a single output type
-    pub fn partition<B, Pred>(self, predicate: Pred) -> (B, B)
+    // NB: `Iterator::partition` only allows a single output type, but
+    // we can be more flexible using `partition_map`!
+    pub fn partition<A, B, Pred>(self, predicate: Pred) -> (A, B)
     where
+        A: Default + Send + ParallelExtend<P::Item> + Extend<S::Item>,
         B: Default + Send + ParallelExtend<P::Item> + Extend<S::Item>,
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
-        either!(self, iter => iter.partition(predicate))
+        match self.inner {
+            Parallel(iter) => iter.partition(predicate),
+            Serial(iter) => iter.partition_map(|item| {
+                if predicate(&item) {
+                    Either::Left(item)
+                } else {
+                    Either::Right(item)
+                }
+            }),
+        }
     }
 
     pub fn partition_map<A, B, Pred, L, R>(self, predicate: Pred) -> (A, B)
