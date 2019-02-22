@@ -1,3 +1,34 @@
+//! Experimental iterator wrapper that is conditionally parallel or serial, using
+//! Rayon's `ParallelIterator` or the standard `Iterator` respectively.
+//!
+//! ## Usage
+//!
+//! First add this crate to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! rayon-cond = "0.1"
+//! ```
+//!
+//! Then in your code, it may be used something like this:
+//!
+//! ```rust
+//! extern crate rayon_cond;
+//!
+//! use rayon_cond::CondIterator;
+//!
+//! fn main() {
+//!     let args: Vec<_> = std::env::args().collect();
+//!
+//!     // Run in parallel if there are an even number of args
+//!     let par = args.len() % 2 == 0;
+//!
+//!     CondIterator::new(args, par).enumerate().for_each(|(i, arg)| {
+//!         println!("arg {}: {:?}", i, arg);
+//!     });
+//! }
+//! ```
+
 extern crate either;
 extern crate itertools;
 extern crate rayon;
