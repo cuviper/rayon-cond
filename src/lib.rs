@@ -306,10 +306,7 @@ where
     {
         match self {
             Parallel(iter) => iter.reduce_with(op),
-            Serial(iter) => iter.fold(None, |acc, item| match acc {
-                Some(acc) => Some(op(acc, item)),
-                None => Some(item),
-            }),
+            Serial(iter) => iter.fold1(op),
         }
     }
 
