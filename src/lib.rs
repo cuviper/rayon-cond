@@ -485,8 +485,8 @@ where
     where
         P: ParallelIterator<Item = (A, B)>,
         S: Iterator<Item = (A, B)>,
-        FromA: Default + Send + ParallelExtend<A> + Extend<A>,
-        FromB: Default + Send + ParallelExtend<B> + Extend<B>,
+        FromA: Default + Send + CondExtend<A>,
+        FromB: Default + Send + CondExtend<B>,
         A: Send,
         B: Send,
     {
@@ -497,8 +497,8 @@ where
     // we can be more flexible using `partition_map`!
     pub fn partition<A, B, Pred>(self, predicate: Pred) -> (A, B)
     where
-        A: Default + Send + ParallelExtend<P::Item> + Extend<S::Item>,
-        B: Default + Send + ParallelExtend<P::Item> + Extend<S::Item>,
+        A: Default + Send + CondExtend<P::Item>,
+        B: Default + Send + CondExtend<P::Item>,
         Pred: Fn(&P::Item) -> bool + Sync + Send,
     {
         match self.inner {
@@ -515,8 +515,8 @@ where
 
     pub fn partition_map<A, B, Pred, L, R>(self, predicate: Pred) -> (A, B)
     where
-        A: Default + Send + ParallelExtend<L> + Extend<L>,
-        B: Default + Send + ParallelExtend<R> + Extend<R>,
+        A: Default + Send + CondExtend<L>,
+        B: Default + Send + CondExtend<R>,
         Pred: Fn(P::Item) -> Either<L, R> + Sync + Send,
         L: Send,
         R: Send,
@@ -802,6 +802,29 @@ where
 impl<C, T> FromCondIterator<T> for C
 where
     C: FromParallelIterator<T> + si::FromIterator<T>,
+    T: Send,
+{
+}
+
+pub trait CondExtend<T>: ParallelExtend<T> + Extend<T>
+where
+    T: Send,
+{
+    fn cond_extend<P, S>(&mut self, cond_iter: CondIterator<P, S>)
+    where
+        P: ParallelIterator<Item = T>,
+        S: Iterator<Item = T>,
+    {
+        match cond_iter.inner {
+            Parallel(iter) => self.par_extend(iter),
+            Serial(iter) => self.extend(iter),
+        }
+    }
+}
+
+impl<C, T> CondExtend<T> for C
+where
+    C: ParallelExtend<T> + Extend<T>,
     T: Send,
 {
 }
