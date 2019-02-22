@@ -65,20 +65,20 @@ where
             + IntoIterator<IntoIter = S, Item = S::Item>,
     {
         if parallel {
-            Self::from_par_iter(iterable)
+            Self::from_parallel(iterable)
         } else {
-            Self::from_iter(iterable)
+            Self::from_serial(iterable)
         }
     }
 
-    pub fn from_par_iter<I>(iterable: I) -> Self
+    pub fn from_parallel<I>(iterable: I) -> Self
     where
         I: IntoParallelIterator<Iter = P, Item = P::Item>,
     {
         Parallel(iterable.into_par_iter())
     }
 
-    pub fn from_iter<I>(iterable: I) -> Self
+    pub fn from_serial<I>(iterable: I) -> Self
     where
         I: IntoIterator<IntoIter = S, Item = S::Item>,
     {
