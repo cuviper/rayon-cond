@@ -476,7 +476,7 @@ where
 
     pub fn collect<C>(self) -> C
     where
-        C: FromParallelIterator<P::Item> + si::FromIterator<S::Item>,
+        C: FromCondIterator<P::Item>,
     {
         either!(self, iter => iter.collect())
     }
@@ -781,4 +781,27 @@ where
             Serial(mut iter) => iter.rposition(predicate),
         }
     }
+}
+
+pub trait FromCondIterator<T>: FromParallelIterator<T> + si::FromIterator<T>
+where
+    T: Send,
+{
+    fn from_cond_iter<P, S>(cond_iter: CondIterator<P, S>) -> Self
+    where
+        P: ParallelIterator<Item = T>,
+        S: Iterator<Item = T>,
+    {
+        match cond_iter.inner {
+            Parallel(iter) => Self::from_par_iter(iter),
+            Serial(iter) => Self::from_iter(iter),
+        }
+    }
+}
+
+impl<C, T> FromCondIterator<T> for C
+where
+    C: FromParallelIterator<T> + si::FromIterator<T>,
+    T: Send,
+{
 }
