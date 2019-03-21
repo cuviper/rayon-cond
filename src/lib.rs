@@ -577,7 +577,7 @@ where
                 right.clear();
                 let (lower, _) = iter.size_hint();
                 left.reserve(lower);
-                left.reserve(lower);
+                right.reserve(lower);
                 iter.for_each(|(a, b)| {
                     left.push(a);
                     right.push(b);
