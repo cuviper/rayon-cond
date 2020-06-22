@@ -190,13 +190,11 @@ where
         wrap_either!(self, iter => iter.map(map_op))
     }
 
-    // If we want to avoid `impl FnMut`, we'll need to implement a custom
-    // serialized `MapWith` type to return.
     pub fn map_with<F, T, R>(
         self,
-        mut init: T,
+        init: T,
         map_op: F,
-    ) -> CondIterator<ri::MapWith<P, T, F>, si::Map<S, impl FnMut(P::Item) -> R>>
+    ) -> CondIterator<ri::MapWith<P, T, F>, MapWith<S, T, F>>
     where
         F: Fn(&mut T, P::Item) -> R + Sync + Send,
         T: Send + Clone,
@@ -204,17 +202,15 @@ where
     {
         match self {
             Parallel(iter) => Parallel(iter.map_with(init, map_op)),
-            Serial(iter) => Serial(iter.map(move |item| map_op(&mut init, item))),
+            Serial(iter) => Serial(MapWith::new(iter, init, map_op)),
         }
     }
 
-    // If we want to avoid `impl FnMut`, we'll need to implement a custom
-    // serialized `MapInit` type to return.
     pub fn map_init<F, INIT, T, R>(
         self,
         init: INIT,
         map_op: F,
-    ) -> CondIterator<ri::MapInit<P, INIT, F>, si::Map<S, impl FnMut(P::Item) -> R>>
+    ) -> CondIterator<ri::MapInit<P, INIT, F>, MapInit<S, T, F>>
     where
         F: Fn(&mut T, P::Item) -> R + Sync + Send,
         INIT: Fn() -> T + Sync + Send,
@@ -222,10 +218,7 @@ where
     {
         match self {
             Parallel(iter) => Parallel(iter.map_init(init, map_op)),
-            Serial(iter) => {
-                let mut init = init();
-                Serial(iter.map(move |item| map_op(&mut init, item)))
-            }
+            Serial(iter) => Serial(MapInit::new(iter, init(), map_op)),
         }
     }
 
@@ -813,3 +806,30 @@ where
     T: Send,
 {
 }
+
+pub struct MapWith<I: Iterator, T, F> {
+    base: I,
+    item: T,
+    map_op: F,
+}
+
+impl<I: Iterator, T, F> MapWith<I, T, F> {
+    pub fn new(base: I, item: T, map_op: F) -> Self {
+        Self { base, item, map_op }
+    }
+}
+
+impl<I, T, F, R> Iterator for MapWith<I, T, F>
+where
+    I: Iterator,
+    F: FnMut(&mut T, I::Item) -> R,
+{
+    type Item = R;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some((self.map_op)(&mut self.item, self.base.next()?))
+    }
+}
+
+pub type MapInit<I, T, F> = MapWith<I, T, F>;
+
