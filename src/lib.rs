@@ -232,6 +232,15 @@ where
         wrap_either!(self, iter => iter.cloned())
     }
 
+    pub fn copied<'a, T>(self) -> CondIterator<ri::Copied<P>, si::Copied<S>>
+    where
+        T: 'a + Copy + Sync + Send,
+        P: ParallelIterator<Item = &'a T>,
+        S: Iterator<Item = &'a T>,
+    {
+        wrap_either!(self, iter => iter.copied())
+    }
+
     pub fn inspect<OP>(self, inspect_op: OP) -> CondIterator<ri::Inspect<P, OP>, si::Inspect<S, OP>>
     where
         OP: Fn(&P::Item) + Sync + Send,
