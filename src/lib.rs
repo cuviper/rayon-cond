@@ -762,6 +762,16 @@ where
             Serial(mut iter) => iter.position(predicate),
         }
     }
+
+    pub fn positions<Pred>(
+        self,
+        predicate: Pred,
+    ) -> CondIterator<ri::Positions<P, Pred>, it::Positions<S, Pred>>
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        wrap_either!(self, iter => iter.positions(predicate))
+    }
 }
 
 impl<P, S> CondIterator<P, S>
