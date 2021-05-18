@@ -772,6 +772,10 @@ where
     {
         wrap_either!(self, iter => iter.positions(predicate))
     }
+
+    pub fn step_by(self, step: usize) -> CondIterator<ri::StepBy<P>, si::StepBy<S>> {
+        wrap_either!(self, iter => iter.step_by(step))
+    }
 }
 
 impl<P, S> CondIterator<P, S>
