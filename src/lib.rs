@@ -7,7 +7,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rayon-cond = "0.1"
+//! rayon-cond = "0.2"
 //! ```
 //!
 //! Then in your code, it may be used something like this:
@@ -516,7 +516,10 @@ where
     where
         P::Item: Clone,
     {
-        wrap_either!(self, iter => iter.intersperse(element))
+        match self {
+            Parallel(iter) => Parallel(iter.intersperse(element)),
+            Serial(iter) => Serial(Itertools::intersperse(iter, element)),
+        }
     }
 
     pub fn opt_len(&self) -> Option<usize> {

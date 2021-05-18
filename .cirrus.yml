@@ -1,7 +1,7 @@
 test_task:
   matrix:
     - container:
-        image: rust:1.29
+        image: rust:1.36
     - container:
         image: rust:latest
     - allow_failures: true

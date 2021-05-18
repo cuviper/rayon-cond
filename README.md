@@ -2,7 +2,7 @@
 
 [![Crate](https://img.shields.io/crates/v/rayon-cond.svg)](https://crates.io/crates/rayon-cond)
 [![Documentation](https://docs.rs/rayon-cond/badge.svg)](https://docs.rs/rayon-cond)
-![minimum rustc 1.29](https://img.shields.io/badge/rustc-1.29+-red.svg)
+![minimum rustc 1.36](https://img.shields.io/badge/rustc-1.36+-red.svg)
 [![Build Status](https://api.cirrus-ci.com/github/cuviper/rayon-cond.svg)](https://cirrus-ci.com/github/cuviper/rayon-cond)
 
 Experimental iterator wrapper that is conditionally parallel or serial, using
@@ -14,7 +14,7 @@ First add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rayon-cond = "0.1"
+rayon-cond = "0.2"
 ```
 
 Then in your code, it may be used something like this:
@@ -36,7 +36,7 @@ fn main() {
 }
 ```
 
-`rayon-cond` currently requires `rustc 1.29.0` or greater.
+`rayon-cond` currently requires `rustc 1.36.0` or greater.
 
 ## License
 
