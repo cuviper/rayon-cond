@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["parallel", "iterator"]
 categories = ["concurrency"]
 exclude = ["/.cirrus.yml"]
+edition = "2018"
 
 [dependencies]
 rayon = "1.5"

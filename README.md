@@ -20,8 +20,6 @@ rayon-cond = "0.2"
 Then in your code, it may be used something like this:
 
 ```rust
-extern crate rayon_cond;
-
 use rayon_cond::CondIterator;
 
 fn main() {

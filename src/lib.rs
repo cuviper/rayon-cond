@@ -13,8 +13,6 @@
 //! Then in your code, it may be used something like this:
 //!
 //! ```rust
-//! extern crate rayon_cond;
-//!
 //! use rayon_cond::CondIterator;
 //!
 //! fn main() {
@@ -29,10 +27,6 @@
 //! }
 //! ```
 
-extern crate either;
-extern crate itertools;
-extern crate rayon;
-
 use either::Either;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -42,7 +36,7 @@ use itertools::structs as it;
 use rayon::iter as ri;
 use std::iter as si;
 
-use CondIterator::*;
+use crate::CondIterator::*;
 
 /// An iterator that could be parallel or serial, with a common API either way.
 ///
