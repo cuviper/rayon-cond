@@ -7,14 +7,12 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rayon-cond = "0.1"
+//! rayon-cond = "0.2"
 //! ```
 //!
 //! Then in your code, it may be used something like this:
 //!
 //! ```rust
-//! extern crate rayon_cond;
-//!
 //! use rayon_cond::CondIterator;
 //!
 //! fn main() {
@@ -29,10 +27,6 @@
 //! }
 //! ```
 
-extern crate either;
-extern crate itertools;
-extern crate rayon;
-
 use either::Either;
 use itertools::Itertools;
 use rayon::prelude::*;
@@ -42,7 +36,7 @@ use itertools::structs as it;
 use rayon::iter as ri;
 use std::iter as si;
 
-use CondIterator::*;
+use crate::CondIterator::*;
 
 /// An iterator that could be parallel or serial, with a common API either way.
 ///
@@ -238,6 +232,15 @@ where
         wrap_either!(self, iter => iter.cloned())
     }
 
+    pub fn copied<'a, T>(self) -> CondIterator<ri::Copied<P>, si::Copied<S>>
+    where
+        T: 'a + Copy + Sync + Send,
+        P: ParallelIterator<Item = &'a T>,
+        S: Iterator<Item = &'a T>,
+    {
+        wrap_either!(self, iter => iter.copied())
+    }
+
     pub fn inspect<OP>(self, inspect_op: OP) -> CondIterator<ri::Inspect<P, OP>, si::Inspect<S, OP>>
     where
         OP: Fn(&P::Item) + Sync + Send,
@@ -281,12 +284,38 @@ where
         wrap_either!(self, iter => iter.flat_map(map_op))
     }
 
+    pub fn flat_map_iter<F, I>(
+        self,
+        map_op: F,
+    ) -> CondIterator<ri::FlatMapIter<P, F>, si::FlatMap<S, I, F>>
+    where
+        F: Fn(P::Item) -> I + Sync + Send,
+        I: IntoIterator,
+        I::Item: Send,
+    {
+        match self {
+            Parallel(iter) => Parallel(iter.flat_map_iter(map_op)),
+            Serial(iter) => Serial(iter.flat_map(map_op)),
+        }
+    }
+
     pub fn flatten(self) -> CondIterator<ri::Flatten<P>, si::Flatten<S>>
     where
         P::Item: IntoParallelIterator,
         S::Item: IntoIterator<Item = <P::Item as IntoParallelIterator>::Item>,
     {
         wrap_either!(self, iter => iter.flatten())
+    }
+
+    pub fn flatten_iter(self) -> CondIterator<ri::FlattenIter<P>, si::Flatten<S>>
+    where
+        P::Item: IntoIterator,
+        <P::Item as IntoIterator>::Item: Send,
+    {
+        match self {
+            Parallel(iter) => Parallel(iter.flatten_iter()),
+            Serial(iter) => Serial(iter.flatten()),
+        }
     }
 
     pub fn reduce<OP, ID>(self, identity: ID, op: OP) -> P::Item
@@ -516,7 +545,10 @@ where
     where
         P::Item: Clone,
     {
-        wrap_either!(self, iter => iter.intersperse(element))
+        match self {
+            Parallel(iter) => Parallel(iter.intersperse(element)),
+            Serial(iter) => Serial(Itertools::intersperse(iter, element)),
+        }
     }
 
     pub fn opt_len(&self) -> Option<usize> {
@@ -729,6 +761,20 @@ where
             Parallel(iter) => iter.position_first(predicate),
             Serial(mut iter) => iter.position(predicate),
         }
+    }
+
+    pub fn positions<Pred>(
+        self,
+        predicate: Pred,
+    ) -> CondIterator<ri::Positions<P, Pred>, it::Positions<S, Pred>>
+    where
+        Pred: Fn(P::Item) -> bool + Sync + Send,
+    {
+        wrap_either!(self, iter => iter.positions(predicate))
+    }
+
+    pub fn step_by(self, step: usize) -> CondIterator<ri::StepBy<P>, si::StepBy<S>> {
+        wrap_either!(self, iter => iter.step_by(step))
     }
 }
 
