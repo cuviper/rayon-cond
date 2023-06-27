@@ -335,7 +335,7 @@ where
     {
         match self {
             Parallel(iter) => iter.reduce_with(op),
-            Serial(iter) => iter.fold1(op),
+            Serial(iter) => iter.reduce(op),
         }
     }
 
