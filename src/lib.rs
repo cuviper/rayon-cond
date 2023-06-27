@@ -88,17 +88,11 @@ where
     }
 
     pub fn is_parallel(&self) -> bool {
-        match self {
-            Parallel(_) => true,
-            _ => false,
-        }
+        matches!(self, Parallel(_))
     }
 
     pub fn is_serial(&self) -> bool {
-        match self {
-            Serial(_) => true,
-            _ => false,
-        }
+        matches!(self, Serial(_))
     }
 }
 
