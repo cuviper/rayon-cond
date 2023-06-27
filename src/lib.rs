@@ -785,6 +785,7 @@ where
     P: IndexedParallelIterator,
     S: ExactSizeIterator<Item = P::Item>,
 {
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         either!(self, ref iter => iter.len())
     }
