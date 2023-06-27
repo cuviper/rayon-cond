@@ -7,7 +7,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rayon-cond = "0.2"
+//! rayon-cond = "0.3"
 //! ```
 //!
 //! Then in your code, it may be used something like this:
@@ -15,16 +15,14 @@
 //! ```rust
 //! use rayon_cond::CondIterator;
 //!
-//! fn main() {
-//!     let args: Vec<_> = std::env::args().collect();
+//! let args: Vec<_> = std::env::args().collect();
 //!
-//!     // Run in parallel if there are an even number of args
-//!     let par = args.len() % 2 == 0;
+//! // Run in parallel if there are an even number of args
+//! let par = args.len() % 2 == 0;
 //!
-//!     CondIterator::new(args, par).enumerate().for_each(|(i, arg)| {
-//!         println!("arg {}: {:?}", i, arg);
-//!     });
-//! }
+//! CondIterator::new(args, par).enumerate().for_each(|(i, arg)| {
+//!     println!("arg {}: {:?}", i, arg);
+//! });
 //! ```
 
 use either::Either;
@@ -90,17 +88,11 @@ where
     }
 
     pub fn is_parallel(&self) -> bool {
-        match self {
-            Parallel(_) => true,
-            _ => false,
-        }
+        matches!(self, Parallel(_))
     }
 
     pub fn is_serial(&self) -> bool {
-        match self {
-            Serial(_) => true,
-            _ => false,
-        }
+        matches!(self, Serial(_))
     }
 }
 
@@ -335,7 +327,7 @@ where
     {
         match self {
             Parallel(iter) => iter.reduce_with(op),
-            Serial(iter) => iter.fold1(op),
+            Serial(iter) => iter.reduce(op),
         }
     }
 
@@ -793,6 +785,7 @@ where
     P: IndexedParallelIterator,
     S: ExactSizeIterator<Item = P::Item>,
 {
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         either!(self, ref iter => iter.len())
     }
