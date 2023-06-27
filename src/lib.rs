@@ -15,16 +15,14 @@
 //! ```rust
 //! use rayon_cond::CondIterator;
 //!
-//! fn main() {
-//!     let args: Vec<_> = std::env::args().collect();
+//! let args: Vec<_> = std::env::args().collect();
 //!
-//!     // Run in parallel if there are an even number of args
-//!     let par = args.len() % 2 == 0;
+//! // Run in parallel if there are an even number of args
+//! let par = args.len() % 2 == 0;
 //!
-//!     CondIterator::new(args, par).enumerate().for_each(|(i, arg)| {
-//!         println!("arg {}: {:?}", i, arg);
-//!     });
-//! }
+//! CondIterator::new(args, par).enumerate().for_each(|(i, arg)| {
+//!     println!("arg {}: {:?}", i, arg);
+//! });
 //! ```
 
 use either::Either;
